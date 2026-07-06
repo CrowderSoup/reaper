@@ -17,10 +17,17 @@ class GuildRepository:
     async def get(self, guild_id: int) -> Guild | None:
         return await self.session.get(Guild, guild_id)
 
-    async def upsert(self, guild_id: int, name: str, icon_hash: str | None = None) -> Guild:
+    async def upsert(
+        self,
+        guild_id: int,
+        name: str,
+        icon_hash: str | None = None,
+        *,
+        enabled_modules: list[str] | None = None,
+    ) -> Guild:
         guild = await self.get(guild_id)
         if guild is None:
-            guild = Guild(guild_id=guild_id, name=name, icon_hash=icon_hash)
+            guild = Guild(guild_id=guild_id, name=name, icon_hash=icon_hash, enabled_modules=enabled_modules or [])
             self.session.add(guild)
         else:
             guild.name = name

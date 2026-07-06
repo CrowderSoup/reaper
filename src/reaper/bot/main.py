@@ -16,6 +16,11 @@ log = logging.getLogger("reaper.bot")
 
 INITIAL_EXTENSIONS = ["reaper.bot.cogs.spam_defense"]
 
+# v1 ships as pure spam-defense -- every fresh install gets it by default rather
+# than requiring an activation step (there's no such command yet; module toggles
+# are a section 6 admin-UI feature for when Module 2 exists and opting out matters).
+DEFAULT_ENABLED_MODULES = ["spam_defense"]
+
 
 class Reaper(commands.Bot):
     def __init__(self) -> None:
@@ -35,7 +40,10 @@ class Reaper(commands.Bot):
     async def on_guild_join(self, guild: discord.Guild) -> None:
         async with get_session() as session:
             await GuildRepository(session).upsert(
-                guild.id, name=guild.name, icon_hash=guild.icon.key if guild.icon else None
+                guild.id,
+                name=guild.name,
+                icon_hash=guild.icon.key if guild.icon else None,
+                enabled_modules=DEFAULT_ENABLED_MODULES,
             )
             await session.commit()
         log.info("Joined guild %s (%s)", guild.name, guild.id)

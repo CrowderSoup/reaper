@@ -19,9 +19,12 @@ async def content_hash_for_message(message: discord.Message) -> str | None:
     if not message.role_mentions:
         return None
 
-    attachment_hashes = sorted(
-        h for a in message.attachments if (h := await hash_attachment(a)) is not None
-    )
+    attachment_hashes = []
+    for a in message.attachments:
+        h = await hash_attachment(a)
+        if h is not None:
+            attachment_hashes.append(h)
+    attachment_hashes.sort()
     digest_input = "|".join([message.content.strip(), *attachment_hashes])
     return hashlib.sha256(digest_input.encode()).hexdigest()
 

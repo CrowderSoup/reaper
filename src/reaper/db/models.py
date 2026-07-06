@@ -7,14 +7,19 @@ from __future__ import annotations
 
 import datetime as dt
 
-from sqlalchemy import BigInteger, ForeignKey, Index, String, Text
+from sqlalchemy import BigInteger, DateTime, ForeignKey, Index, String, Text
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 from sqlalchemy.sql import func
 from sqlalchemy.types import JSON
 
 
 class Base(DeclarativeBase):
-    pass
+    # every dt.datetime column is timestamptz -- the app deals exclusively in
+    # timezone-aware UTC datetimes (e.g. burst_detector's window_expires_at),
+    # and asyncpg rejects binding an aware datetime against a naive column.
+    type_annotation_map = {
+        dt.datetime: DateTime(timezone=True),
+    }
 
 
 class Guild(Base):
