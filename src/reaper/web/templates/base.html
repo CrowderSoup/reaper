@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>{% block title %}Reaper{% endblock %}</title>
+  <script src="https://unpkg.com/htmx.org@2.0.4"></script>
+  <style>
+    body { font-family: system-ui, sans-serif; max-width: 960px; margin: 2rem auto; color: #1a1a1a; }
+    nav { display: flex; justify-content: space-between; margin-bottom: 1.5rem; }
+    table { width: 100%; border-collapse: collapse; }
+    th, td { text-align: left; padding: 0.4rem 0.6rem; border-bottom: 1px solid #ddd; }
+    .tag { font-size: 0.75rem; padding: 0.1rem 0.4rem; border-radius: 0.25rem; background: #eee; }
+  </style>
+</head>
+<body>
+  <nav>
+    <a href="/">Reaper</a>
+    {% if user %}
+      <span>{{ user.username }} &middot; <a href="/logout">Log out</a></span>
+    {% else %}
+      <a href="/login">Log in with Discord</a>
+    {% endif %}
+  </nav>
+  {% block content %}{% endblock %}
+</body>
+</html>

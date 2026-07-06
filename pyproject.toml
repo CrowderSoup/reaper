@@ -1,0 +1,32 @@
+[project]
+name = "reaper"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+authors = [
+    { name = "Aaron Crowder", email = "aaron@crowder.cloud" }
+]
+requires-python = ">=3.12"
+dependencies = [
+    "alembic>=1.13",
+    "apscheduler>=3.10",
+    "asyncpg>=0.29",
+    "discord-py>=2.4",
+    "fastapi>=0.115",
+    "httpx>=0.27",
+    "imagehash>=4.3",
+    "itsdangerous>=2.2",
+    "jinja2>=3.1",
+    "pillow>=10.4",
+    "python-dotenv>=1.0",
+    "python-multipart>=0.0.9",
+    "sqlalchemy[asyncio]>=2.0",
+    "uvicorn[standard]>=0.30",
+]
+
+[project.scripts]
+reaper = "reaper:main"
+
+[build-system]
+requires = ["uv_build>=0.10.9,<0.11.0"]
+build-backend = "uv_build"

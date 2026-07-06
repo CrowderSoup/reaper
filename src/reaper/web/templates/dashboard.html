@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% block title %}Reaper &middot; Guilds{% endblock %}
+{% block content %}
+<h1>Your guilds</h1>
+{% if guilds %}
+<ul>
+  {% for guild in guilds %}
+  <li><a href="/guilds/{{ guild.guild_id }}">{{ guild.name }}</a></li>
+  {% endfor %}
+</ul>
+{% else %}
+<p>No guilds you moderate have Reaper installed yet.</p>
+{% endif %}
+{% endblock %}

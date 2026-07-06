@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block title %}Incidents &middot; Reaper{% endblock %}
+{% block content %}
+<h1>Incidents</h1>
+<table>
+  <thead>
+    <tr><th>When</th><th>Type</th><th>Pattern</th><th>Target</th><th>Snapshot</th><th></th></tr>
+  </thead>
+  <tbody>
+    {% for action in actions %}
+      {% include "partials/incident_row.html" %}
+    {% else %}
+    <tr><td colspan="6">No incidents recorded.</td></tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock %}

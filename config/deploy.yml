@@ -1,0 +1,58 @@
+# Kamal 2 deploy config for Reaper (reaper.crowdersoup.com)
+#
+# Two roles off the same image (spec section 7):
+#   web -- FastAPI admin UI + OAuth callback, exposed via Traefik/Let's Encrypt
+#   bot -- the discord.py gateway process, no exposed port
+#
+# Postgres is DO Managed Postgres -- DATABASE_URL points at it directly, no
+# accessory needed here (spec section 7 / 9).
+#
+# Run migrations before the new containers take traffic:
+#   kamal app exec --roles=web -- uv run alembic upgrade head
+
+service: reaper
+image: crowdersoup/reaper
+
+servers:
+  web:
+    hosts:
+      - 64.23.247.60
+    proxy:
+      ssl: true
+      host: reaper.crowdersoup.com
+      app_port: 8000
+      healthcheck:
+        path: /up
+  bot:
+    hosts:
+      - 64.23.247.60
+    cmd: "uv run python -m reaper.bot.main"
+
+registry:
+  server: ghcr.io
+  username: crowdersoup
+  password:
+    - KAMAL_REGISTRY_PASSWORD
+
+builder:
+  arch: amd64
+
+ssh:
+  user: deploy
+  keys:
+    - ~/.ssh/crowder-cloud
+
+env:
+  clear:
+    OAUTH_REDIRECT_URI: https://reaper.crowdersoup.com/auth/callback
+    DEFAULT_BURST_WINDOW_SECONDS: "60"
+    DEFAULT_BURST_CHANNEL_THRESHOLD: "3"
+    DEFAULT_TIMEOUT_SECONDS: "3600"
+    SCAM_IMAGE_HAMMING_THRESHOLD: "10"
+  secret:
+    - DISCORD_BOT_TOKEN
+    - DISCORD_CLIENT_ID
+    - DISCORD_CLIENT_SECRET
+    - DATABASE_URL
+    - SESSION_SECRET_KEY
+    - BOT_SUPERADMIN_IDS

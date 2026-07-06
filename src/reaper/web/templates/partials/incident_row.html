@@ -1,0 +1,15 @@
+<tr id="action-{{ action.id }}">
+  <td>{{ action.created_at.strftime("%Y-%m-%d %H:%M") }}</td>
+  <td>{{ action.action_type }}</td>
+  <td><span class="tag">{{ action.matched_pattern }}</span></td>
+  <td>&lt;@{{ action.target_user_id }}&gt;</td>
+  <td>{{ action.message_snapshot.get("content", "") }}</td>
+  <td>
+    {% if action.reviewed_by %}
+      reviewed
+    {% else %}
+      <button hx-post="/guilds/{{ action.guild_id }}/incidents/{{ action.id }}/review"
+              hx-target="#action-{{ action.id }}" hx-swap="outerHTML">Mark reviewed</button>
+    {% endif %}
+  </td>
+</tr>

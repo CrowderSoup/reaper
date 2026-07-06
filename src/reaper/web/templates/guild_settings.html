@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% block title %}{{ guild.name }} settings &middot; Reaper{% endblock %}
+{% block content %}
+<h1>{{ guild.name }} settings</h1>
+<form method="post">
+  <p>
+    <label>Mod alert channel ID<br>
+      <input type="text" name="mod_alert_channel_id" value="{{ guild.mod_alert_channel_id or '' }}">
+    </label>
+  </p>
+  <p>
+    <label>Timeout duration (seconds)<br>
+      <input type="number" name="timeout_seconds" value="{{ guild.timeout_seconds or '' }}">
+    </label>
+  </p>
+  <p>
+    <label>Burst window (seconds)<br>
+      <input type="number" name="burst_window_seconds" value="{{ guild.burst_window_seconds or '' }}">
+    </label>
+  </p>
+  <p>
+    <label>Burst channel threshold<br>
+      <input type="number" name="burst_channel_threshold" value="{{ guild.burst_channel_threshold or '' }}">
+    </label>
+  </p>
+  <button type="submit">Save</button>
+</form>
+{% endblock %}
