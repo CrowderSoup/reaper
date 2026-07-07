@@ -8,6 +8,8 @@ notifications and an audit trail of every automated action.
 from __future__ import annotations
 
 import datetime as dt
+import random
+from collections import Counter
 
 import discord
 from discord import app_commands
@@ -37,6 +39,30 @@ def _is_mod(member: discord.Member, guild: Guild) -> bool:
         return True
     member_role_ids = {r.id for r in member.roles}
     return bool(member_role_ids & set(guild.mod_role_ids))
+
+
+_EULOGY_BOT_LINE = "Bots have no soul for the Reaper to collect."
+
+_EULOGY_CLEAN_LINES = [
+    "Here lies an innocent soul, untouched by the Reaper's scythe... yet.",
+    "No sins recorded. The Reaper finds this suspicious.",
+    "A clean record. Either truly virtuous, or exceptionally careful.",
+]
+
+_EULOGY_PATTERN_LINES = {
+    "cross_channel_burst": [
+        "flooded one too many channels at once — the scythe does not forgive floods.",
+        "set off alarms in every channel before the Reaper could blink.",
+    ],
+    "image_hash_match": [
+        "fell for a cursed JPEG the Reaper had already catalogued.",
+        "shared an image marked for judgment, and was judged accordingly.",
+    ],
+    "manual": [
+        "drew the Reaper's eye with offerings too strange to automate.",
+        "was judged for deeds too odd to ignore.",
+    ],
+}
 
 
 class AnomalyReviewView(discord.ui.View):
@@ -323,6 +349,57 @@ class SpamDefenseCog(commands.Cog):
             for r in rows
         ]
         await interaction.response.send_message("\n".join(lines), ephemeral=True)
+
+    @reaper.command(name="history", description="Show a member's moderation history")
+    @app_commands.describe(user="The member to look up", count="How many entries to show (default 10)")
+    async def history(self, interaction: discord.Interaction, user: discord.Member, count: int = 10) -> None:
+        async with get_session() as session:
+            guild = await GuildRepository(session).get(interaction.guild_id)  # type: ignore[arg-type]
+            if guild is None or not _is_mod(interaction.user, guild):  # type: ignore[arg-type]
+                await interaction.response.send_message("You don't have permission to use this.", ephemeral=True)
+                return
+            rows = await ModActionRepository(session, interaction.guild_id).list_for_user(user.id, limit=count)  # type: ignore[arg-type]
+
+        if not rows:
+            await interaction.response.send_message(f"No recorded actions for {user.mention}.", ephemeral=True)
+            return
+
+        embed = discord.Embed(title="Moderation history", color=discord.Color.blurple())
+        embed.set_author(name=user.display_name, icon_url=user.display_avatar.url)
+        embed.description = "\n".join(
+            f"#{r.id} `{r.created_at:%Y-%m-%d %H:%M}` {r.action_type} / {r.matched_pattern}"
+            f"{' (reviewed)' if r.reviewed_by else ''}"
+            for r in rows
+        )
+        embed.set_footer(text=f"Showing {len(rows)} most recent")
+        await interaction.response.send_message(embed=embed, ephemeral=True)
+
+    @reaper.command(name="eulogy", description="The Reaper delivers a eulogy for a member's crimes")
+    @app_commands.describe(user="Who the Reaper shall remember")
+    async def eulogy(self, interaction: discord.Interaction, user: discord.Member) -> None:
+        embed = discord.Embed(title=f"⚰️ Here lies {user.display_name}", color=discord.Color.from_str("#2b2d31"))
+        embed.set_thumbnail(url=user.display_avatar.url)
+
+        if user.bot:
+            embed.description = _EULOGY_BOT_LINE
+            await interaction.response.send_message(embed=embed)
+            return
+
+        async with get_session() as session:
+            rows = await ModActionRepository(session, interaction.guild_id).list_for_user(user.id, limit=100)  # type: ignore[arg-type]
+
+        if not rows:
+            embed.description = random.choice(_EULOGY_CLEAN_LINES)
+            await interaction.response.send_message(embed=embed)
+            return
+
+        pattern_counts = Counter(r.matched_pattern for r in rows)
+        top_pattern, _ = pattern_counts.most_common(1)[0]
+        lines = _EULOGY_PATTERN_LINES.get(top_pattern, _EULOGY_PATTERN_LINES["manual"])
+        total = len(rows)
+        embed.description = f"{user.mention} {random.choice(lines)}"
+        embed.set_footer(text=f"Reaped {total} time{'s' if total != 1 else ''} · Preferred method: {top_pattern}")
+        await interaction.response.send_message(embed=embed)
 
 
 async def setup(bot: commands.Bot) -> None:
