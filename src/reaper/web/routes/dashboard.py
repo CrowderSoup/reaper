@@ -13,7 +13,11 @@ router = APIRouter()
 
 
 @router.get("/", response_class=HTMLResponse)
-async def index(request: Request, user: dict = Depends(current_user)) -> HTMLResponse:
+async def index(request: Request) -> HTMLResponse:
+    if request.session.get("user_id") is None:
+        return templates.TemplateResponse(request, "landing.html", {"user": None})
+
+    user = current_user(request)
     async with get_session() as session:
         all_guilds = await GuildRepository(session).list_all()
 

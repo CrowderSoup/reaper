@@ -8,7 +8,7 @@
     {% if action.reviewed_by %}
       reviewed
     {% else %}
-      <button hx-post="/guilds/{{ action.guild_id }}/incidents/{{ action.id }}/review"
+      <button class="btn btn-secondary btn-sm" hx-post="/guilds/{{ action.guild_id }}/incidents/{{ action.id }}/review"
               hx-target="#action-{{ action.id }}" hx-swap="outerHTML">Mark reviewed</button>
     {% endif %}
   </td>

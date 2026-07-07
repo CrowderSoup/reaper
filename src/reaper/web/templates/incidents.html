@@ -10,7 +10,7 @@
     {% for action in actions %}
       {% include "partials/incident_row.html" %}
     {% else %}
-    <tr><td colspan="6">No incidents recorded.</td></tr>
+    <tr><td colspan="6" class="empty-state">No incidents recorded.</td></tr>
     {% endfor %}
   </tbody>
 </table>

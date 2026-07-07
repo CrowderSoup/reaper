@@ -1,28 +1,27 @@
 {% extends "base.html" %}
 {% block title %}{{ guild.name }} settings &middot; Reaper{% endblock %}
 {% block content %}
-<h1>{{ guild.name }} settings</h1>
-<form method="post">
-  <p>
-    <label>Mod alert channel ID<br>
-      <input type="text" name="mod_alert_channel_id" value="{{ guild.mod_alert_channel_id or '' }}">
-    </label>
-  </p>
-  <p>
-    <label>Timeout duration (seconds)<br>
-      <input type="number" name="timeout_seconds" value="{{ guild.timeout_seconds or '' }}">
-    </label>
-  </p>
-  <p>
-    <label>Burst window (seconds)<br>
-      <input type="number" name="burst_window_seconds" value="{{ guild.burst_window_seconds or '' }}">
-    </label>
-  </p>
-  <p>
-    <label>Burst channel threshold<br>
-      <input type="number" name="burst_channel_threshold" value="{{ guild.burst_channel_threshold or '' }}">
-    </label>
-  </p>
-  <button type="submit">Save</button>
+<div class="page-header">
+  <h1>{{ guild.name }} settings</h1>
+  <a class="btn btn-secondary btn-sm" href="/guilds/{{ guild.guild_id }}">Back to guild</a>
+</div>
+<form method="post" class="card">
+  <div class="field">
+    <label for="mod_alert_channel_id">Mod alert channel ID</label>
+    <input type="text" id="mod_alert_channel_id" name="mod_alert_channel_id" value="{{ guild.mod_alert_channel_id or '' }}">
+  </div>
+  <div class="field">
+    <label for="timeout_seconds">Timeout duration (seconds)</label>
+    <input type="number" id="timeout_seconds" name="timeout_seconds" value="{{ guild.timeout_seconds or '' }}">
+  </div>
+  <div class="field">
+    <label for="burst_window_seconds">Burst window (seconds)</label>
+    <input type="number" id="burst_window_seconds" name="burst_window_seconds" value="{{ guild.burst_window_seconds or '' }}">
+  </div>
+  <div class="field">
+    <label for="burst_channel_threshold">Burst channel threshold</label>
+    <input type="number" id="burst_channel_threshold" name="burst_channel_threshold" value="{{ guild.burst_channel_threshold or '' }}">
+  </div>
+  <button type="submit" class="btn btn-primary">Save</button>
 </form>
 {% endblock %}

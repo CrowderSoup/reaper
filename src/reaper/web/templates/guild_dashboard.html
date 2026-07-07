@@ -1,11 +1,13 @@
 {% extends "base.html" %}
 {% block title %}{{ guild.name }} &middot; Reaper{% endblock %}
 {% block content %}
-<h1>{{ guild.name }}</h1>
-<p>
-  <a href="/guilds/{{ guild.guild_id }}/settings">Settings</a> &middot;
-  <a href="/guilds/{{ guild.guild_id }}/incidents">All incidents</a>
-</p>
+<div class="page-header">
+  <h1>{{ guild.name }}</h1>
+  <nav class="site-nav">
+    <a class="btn btn-secondary btn-sm" href="/guilds/{{ guild.guild_id }}/settings">Settings</a>
+    <a class="btn btn-secondary btn-sm" href="/guilds/{{ guild.guild_id }}/incidents">All incidents</a>
+  </nav>
+</div>
 
 <h2>Recent actions</h2>
 <table>
@@ -22,7 +24,7 @@
       <td>{{ "yes" if action.reviewed_by else "no" }}</td>
     </tr>
     {% else %}
-    <tr><td colspan="5">No actions yet.</td></tr>
+    <tr><td colspan="5" class="empty-state">No actions yet.</td></tr>
     {% endfor %}
   </tbody>
 </table>

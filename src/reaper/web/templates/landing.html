@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% block title %}Reaper &middot; Automated Discord moderation{% endblock %}
+{% block content %}
+<section class="hero">
+  <img src="/static/img/reaper.png" alt="Reaper" class="hero-logo">
+  <h1>Reaper</h1>
+  <p class="tagline">Automated spam &amp; security defense for your Discord server.</p>
+  <p class="hero-sub">
+    Reaper watches for scam links, known scam images, and raid-style message bursts,
+    then times out or bans the source automatically -- so your mods don't have to
+    catch it themselves.
+  </p>
+  <div class="hero-actions">
+    <a class="btn btn-primary" href="/login">Log in with Discord</a>
+    <a class="btn btn-secondary" href="{{ bot_invite_url() }}">Add Reaper to your server</a>
+  </div>
+
+  <div class="feature-grid">
+    <div class="card">
+      <h3>Scam image detection</h3>
+      <p>Perceptual hashing catches recycled scam screenshots even when they're re-uploaded or lightly edited.</p>
+    </div>
+    <div class="card">
+      <h3>Raid burst control</h3>
+      <p>Cross-channel message bursts trigger automatic timeouts before a raid can spread.</p>
+    </div>
+    <div class="card">
+      <h3>Mod-first review</h3>
+      <p>Every auto-action lands in a mod-alert channel with one-click ban, dismiss, or reporting-list controls.</p>
+    </div>
+  </div>
+</section>
+{% endblock %}
