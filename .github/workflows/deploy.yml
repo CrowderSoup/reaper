@@ -1,0 +1,49 @@
+name: Deploy
+
+on:
+  push:
+    branches: [main]
+
+env:
+  SSH_PRIVATE_KEY: ${{ secrets.CROWDER_CLOUD_SSH_KEY }}
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: "3.3"
+
+      - run: gem install kamal -v '~> 2'
+
+      - name: Setup SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "$SSH_PRIVATE_KEY" > ~/.ssh/crowder-cloud
+          chmod 600 ~/.ssh/crowder-cloud
+
+      - name: Write kamal secrets
+        run: |
+          cat > .kamal/secrets <<'EOF'
+          KAMAL_REGISTRY_PASSWORD=$KAMAL_REGISTRY_PASSWORD
+          DISCORD_BOT_TOKEN=$DISCORD_BOT_TOKEN
+          DISCORD_CLIENT_ID=$DISCORD_CLIENT_ID
+          DISCORD_CLIENT_SECRET=$DISCORD_CLIENT_SECRET
+          DATABASE_URL=$DATABASE_URL
+          SESSION_SECRET_KEY=$SESSION_SECRET_KEY
+          BOT_SUPERADMIN_IDS=$BOT_SUPERADMIN_IDS
+          EOF
+
+      - name: Deploy
+        run: kamal deploy
+        env:
+          KAMAL_REGISTRY_PASSWORD: ${{ secrets.KAMAL_REGISTRY_PASSWORD }}
+          DISCORD_BOT_TOKEN: ${{ secrets.DISCORD_BOT_TOKEN }}
+          DISCORD_CLIENT_ID: ${{ secrets.DISCORD_CLIENT_ID }}
+          DISCORD_CLIENT_SECRET: ${{ secrets.DISCORD_CLIENT_SECRET }}
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          SESSION_SECRET_KEY: ${{ secrets.SESSION_SECRET_KEY }}
+          BOT_SUPERADMIN_IDS: ${{ secrets.BOT_SUPERADMIN_IDS }}
