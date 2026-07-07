@@ -13,6 +13,8 @@ wheels/
 .env
 .env.*
 !.env.example
+.kamal/secrets
+!.kamal/secrets.example
 
 # Editors / OS
 .DS_Store
