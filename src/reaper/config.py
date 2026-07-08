@@ -45,6 +45,12 @@ class Settings:
     default_timeout_seconds: int = field(default_factory=lambda: _int_env("DEFAULT_TIMEOUT_SECONDS", 3600))
     scam_image_hamming_threshold: int = field(default_factory=lambda: _int_env("SCAM_IMAGE_HAMMING_THRESHOLD", 10))
 
+    # /reaper roast (mod-only, LLM-generated) -- empty api key disables the command
+    anthropic_api_key: str = field(default_factory=lambda: os.environ.get("ANTHROPIC_API_KEY", ""))
+    roast_model: str = field(default_factory=lambda: os.environ.get("ROAST_MODEL", "claude-haiku-4-5"))
+    roast_max_messages: int = field(default_factory=lambda: _int_env("ROAST_MAX_MESSAGES", 25))
+    roast_channel_scan_limit: int = field(default_factory=lambda: _int_env("ROAST_CHANNEL_SCAN_LIMIT", 300))
+
 
 @lru_cache
 def get_settings() -> Settings:

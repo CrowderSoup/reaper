@@ -129,6 +129,9 @@ def make_interaction(make_member: Callable) -> Callable:
         interaction.guild_id = guild_id
         interaction.response = MagicMock()
         interaction.response.send_message = AsyncMock()
+        interaction.response.defer = AsyncMock()
+        interaction.followup = MagicMock()
+        interaction.followup.send = AsyncMock()
         return interaction
 
     return _make_interaction
