@@ -35,6 +35,7 @@ jobs:
           DATABASE_URL=$DATABASE_URL
           SESSION_SECRET_KEY=$SESSION_SECRET_KEY
           BOT_SUPERADMIN_IDS=$BOT_SUPERADMIN_IDS
+          ANTHROPIC_API_KEY=$ANTHROPIC_API_KEY
           EOF
 
       - name: Deploy
@@ -47,3 +48,4 @@ jobs:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
           SESSION_SECRET_KEY: ${{ secrets.SESSION_SECRET_KEY }}
           BOT_SUPERADMIN_IDS: ${{ secrets.BOT_SUPERADMIN_IDS }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
