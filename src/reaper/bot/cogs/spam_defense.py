@@ -148,6 +148,7 @@ class SpamDefenseCog(commands.Cog):
 
     reaper = app_commands.Group(name="reaper", description="Reaper moderation commands")
     hashlist = app_commands.Group(name="hashlist", description="Manage the scam image hash list", parent=reaper)
+    modrole = app_commands.Group(name="modrole", description="Manage which roles Reaper treats as mods", parent=reaper)
 
     # -- message pipeline ---------------------------------------------------
 
@@ -362,6 +363,45 @@ class SpamDefenseCog(commands.Cog):
             await session.commit()
         await interaction.response.send_message("Config updated.", ephemeral=True)
 
+    @modrole.command(name="add", description="Let members with this role use Reaper's mod-gated commands")
+    @app_commands.checks.has_permissions(manage_guild=True)
+    @app_commands.describe(role="Role to grant Reaper mod access to")
+    async def modrole_add(self, interaction: discord.Interaction, role: discord.Role) -> None:
+        async with get_session() as session:
+            repo = GuildRepository(session)
+            guild = await repo.get(interaction.guild_id)  # type: ignore[arg-type]
+            if guild is None:
+                guild = await repo.upsert(interaction.guild_id, name=interaction.guild.name)  # type: ignore[union-attr]
+            if role.id not in guild.mod_role_ids:
+                guild.mod_role_ids = [*guild.mod_role_ids, role.id]
+            await session.commit()
+        await interaction.response.send_message(f"{role.mention} can now use Reaper's mod commands.", ephemeral=True)
+
+    @modrole.command(name="remove", description="Revoke a role's access to Reaper's mod-gated commands")
+    @app_commands.checks.has_permissions(manage_guild=True)
+    @app_commands.describe(role="Role to revoke Reaper mod access from")
+    async def modrole_remove(self, interaction: discord.Interaction, role: discord.Role) -> None:
+        async with get_session() as session:
+            repo = GuildRepository(session)
+            guild = await repo.get(interaction.guild_id)  # type: ignore[arg-type]
+            if guild is not None and role.id in guild.mod_role_ids:
+                guild.mod_role_ids = [rid for rid in guild.mod_role_ids if rid != role.id]
+                await session.commit()
+        await interaction.response.send_message(f"{role.mention} no longer has Reaper mod access.", ephemeral=True)
+
+    @modrole.command(name="list", description="Show which roles Reaper treats as mods")
+    @app_commands.checks.has_permissions(manage_guild=True)
+    async def modrole_list(self, interaction: discord.Interaction) -> None:
+        async with get_session() as session:
+            guild = await GuildRepository(session).get(interaction.guild_id)  # type: ignore[arg-type]
+        if not guild or not guild.mod_role_ids:
+            await interaction.response.send_message(
+                "No mod roles configured (members with Manage Server can still use mod commands).", ephemeral=True
+            )
+            return
+        mentions = ", ".join(f"<@&{rid}>" for rid in guild.mod_role_ids)
+        await interaction.response.send_message(f"Mod roles: {mentions}", ephemeral=True)
+
     @reaper.command(name="incidents", description="Pull last N ModAction rows")
     @app_commands.describe(count="How many recent incidents to show (default 10)")
     async def incidents(self, interaction: discord.Interaction, count: int = 10) -> None:
@@ -381,8 +421,12 @@ class SpamDefenseCog(commands.Cog):
     @app_commands.describe(user="The member to look up", count="How many entries to show (default 10)")
     async def history(self, interaction: discord.Interaction, user: discord.Member, count: int = 10) -> None:
         async with get_session() as session:
-            guild = await GuildRepository(session).get(interaction.guild_id)  # type: ignore[arg-type]
-            if guild is None or not _is_mod(interaction.user, guild):  # type: ignore[arg-type]
+            repo = GuildRepository(session)
+            guild = await repo.get(interaction.guild_id)  # type: ignore[arg-type]
+            if guild is None:
+                guild = await repo.upsert(interaction.guild_id, name=interaction.guild.name)  # type: ignore[union-attr]
+                await session.commit()
+            if not _is_mod(interaction.user, guild):  # type: ignore[arg-type]
                 await interaction.response.send_message("You don't have permission to use this.", ephemeral=True)
                 return
             rows = await ModActionRepository(session, interaction.guild_id).list_for_user(user.id, limit=count)  # type: ignore[arg-type]
@@ -433,8 +477,12 @@ class SpamDefenseCog(commands.Cog):
     @app_commands.checks.cooldown(1, 30, key=lambda i: (i.guild_id, i.user.id))
     async def roast(self, interaction: discord.Interaction, user: discord.Member) -> None:
         async with get_session() as session:
-            guild = await GuildRepository(session).get(interaction.guild_id)  # type: ignore[arg-type]
-            if guild is None or not _is_mod(interaction.user, guild):  # type: ignore[arg-type]
+            repo = GuildRepository(session)
+            guild = await repo.get(interaction.guild_id)  # type: ignore[arg-type]
+            if guild is None:
+                guild = await repo.upsert(interaction.guild_id, name=interaction.guild.name)  # type: ignore[union-attr]
+                await session.commit()
+            if not _is_mod(interaction.user, guild):  # type: ignore[arg-type]
                 await interaction.response.send_message("You don't have permission to use this.", ephemeral=True)
                 return
 

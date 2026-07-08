@@ -22,6 +22,10 @@
     <label for="burst_channel_threshold">Burst channel threshold</label>
     <input type="number" id="burst_channel_threshold" name="burst_channel_threshold" value="{{ guild.burst_channel_threshold or '' }}">
   </div>
+  <div class="field">
+    <label for="mod_role_ids">Mod role IDs (comma or space separated)</label>
+    <input type="text" id="mod_role_ids" name="mod_role_ids" value="{{ guild.mod_role_ids | join(', ') }}">
+  </div>
   <button type="submit" class="btn btn-primary">Save</button>
 </form>
 {% endblock %}

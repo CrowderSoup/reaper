@@ -28,6 +28,7 @@ async def update_settings(
     timeout_seconds: int | None = Form(None),
     burst_window_seconds: int | None = Form(None),
     burst_channel_threshold: int | None = Form(None),
+    mod_role_ids: str | None = Form(None),
 ) -> RedirectResponse:
     require_guild_access(guild_id)(user)
     async with get_session() as session:
@@ -38,5 +39,8 @@ async def update_settings(
             guild.timeout_seconds = timeout_seconds
             guild.burst_window_seconds = burst_window_seconds
             guild.burst_channel_threshold = burst_channel_threshold
+            guild.mod_role_ids = [
+                int(part) for part in (mod_role_ids or "").replace(",", " ").split() if part.strip()
+            ]
         await session.commit()
     return RedirectResponse(f"/guilds/{guild_id}/settings", status_code=303)
