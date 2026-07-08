@@ -31,6 +31,16 @@ Alembic, PostgreSQL, APScheduler, Kamal.
    uv run --env-file .env uvicorn reaper.web.main:app --reload
    ```
 
+## Testing
+
+```
+uv run pytest
+```
+
+Tests don't require a running Postgres instance or a Discord token: repository
+tests run against an in-memory SQLite database, and discord.py objects are
+mocked. See `tests/conftest.py` for the shared fixtures.
+
 ## Migrations
 
 ```

@@ -40,6 +40,16 @@ class ModActionRepository(GuildScopedRepository):
         result = await self.session.scalars(stmt)
         return list(result)
 
+    async def list_for_user(self, target_user_id: int, limit: int = 10) -> list[ModAction]:
+        stmt = (
+            select(ModAction)
+            .where(ModAction.guild_id == self.guild_id, ModAction.target_user_id == target_user_id)
+            .order_by(ModAction.created_at.desc())
+            .limit(limit)
+        )
+        result = await self.session.scalars(stmt)
+        return list(result)
+
     async def mark_reviewed(self, action_id: int, reviewer_user_id: int) -> ModAction | None:
         action = await self.session.get(ModAction, action_id)
         if action is None or action.guild_id != self.guild_id:
