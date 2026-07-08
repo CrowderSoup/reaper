@@ -11,12 +11,14 @@ import datetime as dt
 import random
 from collections import Counter
 
+import anthropic
 import discord
 from discord import app_commands
 from discord.ext import commands
 
 from reaper.bot.services.burst_detector import BurstResult, evaluate_burst
 from reaper.bot.services.image_hash_matcher import hash_attachment, is_image_only_role_mention
+from reaper.bot.services.roast_generator import fetch_recent_messages, generate_roast
 from reaper.config import get_settings
 from reaper.db.models import Guild, ScamImageHash
 from reaper.db.repositories.guilds import GuildRepository
@@ -113,6 +115,22 @@ class AnomalyReviewView(discord.ui.View):
             content=f"Added to hash list by {interaction.user.mention}. Future matches will auto-action.",
             view=None,
         )
+
+
+class RoastReviewView(discord.ui.View):
+    """Ephemeral preview attached to a generated roast: a mod must click Post
+    before the LLM's output ever reaches the channel.
+    """
+
+    def __init__(self, *, embed: discord.Embed, target_mention: str) -> None:
+        super().__init__(timeout=300)
+        self.embed = embed
+        self.target_mention = target_mention
+
+    @discord.ui.button(label="Post", style=discord.ButtonStyle.danger)
+    async def post(self, interaction: discord.Interaction, button: discord.ui.Button) -> None:
+        await interaction.channel.send(content=self.target_mention, embed=self.embed)  # type: ignore[union-attr]
+        await interaction.response.edit_message(content="Posted.", embed=None, view=None)
 
 
 class SpamDefenseCog(commands.Cog):
@@ -400,6 +418,65 @@ class SpamDefenseCog(commands.Cog):
         embed.description = f"{user.mention} {random.choice(lines)}"
         embed.set_footer(text=f"Reaped {total} time{'s' if total != 1 else ''} · Preferred method: {top_pattern}")
         await interaction.response.send_message(embed=embed)
+
+    @reaper.command(name="roast", description="The Reaper roasts a member based on their recent messages")
+    @app_commands.describe(user="Who the Reaper shall roast")
+    @app_commands.checks.cooldown(1, 30, key=lambda i: (i.guild_id, i.user.id))
+    async def roast(self, interaction: discord.Interaction, user: discord.Member) -> None:
+        async with get_session() as session:
+            guild = await GuildRepository(session).get(interaction.guild_id)  # type: ignore[arg-type]
+            if guild is None or not _is_mod(interaction.user, guild):  # type: ignore[arg-type]
+                await interaction.response.send_message("You don't have permission to use this.", ephemeral=True)
+                return
+
+        if user.bot:
+            await interaction.response.send_message(_EULOGY_BOT_LINE, ephemeral=True)
+            return
+
+        settings = get_settings()
+        if not settings.anthropic_api_key:
+            await interaction.response.send_message(
+                "Roast isn't configured for this bot (missing ANTHROPIC_API_KEY).", ephemeral=True
+            )
+            return
+
+        await interaction.response.defer(ephemeral=True)
+
+        messages = await fetch_recent_messages(
+            interaction.guild,  # type: ignore[arg-type]
+            user,
+            invoking_channel=interaction.channel,
+            max_messages=settings.roast_max_messages,
+            channel_scan_limit=settings.roast_channel_scan_limit,
+        )
+        if not messages:
+            await interaction.followup.send(
+                f"{user.mention} hasn't said enough for the Reaper to work with.", ephemeral=True
+            )
+            return
+
+        try:
+            roast_line = await generate_roast(
+                api_key=settings.anthropic_api_key,
+                model=settings.roast_model,
+                display_name=user.display_name,
+                messages=messages,
+            )
+        except anthropic.APIError:
+            await interaction.followup.send("The Reaper's wit failed them. Try again later.", ephemeral=True)
+            return
+
+        if not roast_line:
+            await interaction.followup.send("The Reaper's wit failed them. Try again later.", ephemeral=True)
+            return
+
+        embed = discord.Embed(title="🔥 Roast", description=f"{user.mention} {roast_line}", color=discord.Color.orange())
+        embed.set_thumbnail(url=user.display_avatar.url)
+        await interaction.followup.send(
+            embed=embed,
+            view=RoastReviewView(embed=embed, target_mention=user.mention),
+            ephemeral=True,
+        )
 
 
 async def setup(bot: commands.Bot) -> None:

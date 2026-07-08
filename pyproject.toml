@@ -9,6 +9,7 @@ authors = [
 requires-python = ">=3.12"
 dependencies = [
     "alembic>=1.13",
+    "anthropic>=0.40",
     "apscheduler>=3.10",
     "asyncpg>=0.29",
     "discord-py>=2.4",
