@@ -29,12 +29,13 @@ async def fetch_recent_messages(
 
     There's no standing log of member messages (spec's ModAction snapshots only
     capture content at auto-action time), so this does a live, capped scan --
-    the invoking channel first, then the guild's other text channels -- rather
-    than sweeping the whole guild, which would be slow and rate-limit-prone.
+    the invoking channel first (which may be a thread), then the guild's other
+    text channels -- rather than sweeping the whole guild, which would be slow
+    and rate-limit-prone.
     """
     contents: list[str] = []
-    channels: list[discord.TextChannel] = []
-    if isinstance(invoking_channel, discord.TextChannel):
+    channels: list[discord.TextChannel | discord.Thread] = []
+    if isinstance(invoking_channel, (discord.TextChannel, discord.Thread)):
         channels.append(invoking_channel)
     channels.extend(c for c in guild.text_channels if c not in channels)
 

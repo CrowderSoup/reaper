@@ -126,11 +126,20 @@ class RoastReviewView(discord.ui.View):
         super().__init__(timeout=300)
         self.embed = embed
         self.target_mention = target_mention
+        self.message: discord.Message | discord.WebhookMessage | None = None
 
     @discord.ui.button(label="Post", style=discord.ButtonStyle.danger)
     async def post(self, interaction: discord.Interaction, button: discord.ui.Button) -> None:
         await interaction.channel.send(content=self.target_mention, embed=self.embed)  # type: ignore[union-attr]
         await interaction.response.edit_message(content="Posted.", embed=None, view=None)
+
+    async def on_timeout(self) -> None:
+        if self.message is None:
+            return
+        try:
+            await self.message.edit(content="Roast preview expired.", embed=None, view=None)
+        except discord.HTTPException:
+            pass
 
 
 class SpamDefenseCog(commands.Cog):
@@ -472,11 +481,8 @@ class SpamDefenseCog(commands.Cog):
 
         embed = discord.Embed(title="🔥 Roast", description=f"{user.mention} {roast_line}", color=discord.Color.orange())
         embed.set_thumbnail(url=user.display_avatar.url)
-        await interaction.followup.send(
-            embed=embed,
-            view=RoastReviewView(embed=embed, target_mention=user.mention),
-            ephemeral=True,
-        )
+        view = RoastReviewView(embed=embed, target_mention=user.mention)
+        view.message = await interaction.followup.send(embed=embed, view=view, ephemeral=True)
 
 
 async def setup(bot: commands.Bot) -> None:
