@@ -3,6 +3,9 @@ name: Deploy
 on:
   push:
     branches: [main]
+  # Lets a deploy be re-run with updated secrets without pushing a commit
+  # (`gh workflow run deploy.yml`); `gh run rerun` only reaches back 30 days.
+  workflow_dispatch: {}
 
 env:
   SSH_PRIVATE_KEY: ${{ secrets.CROWDER_CLOUD_SSH_KEY }}
